@@ -25,7 +25,7 @@ https://www.adafruit.com/product/4210
 
 https://www.amazon.com/Channel-Optocoupler-Isolated-Control-Arduino/dp/B07XGZSYJV
 
-A simpler approach could be to just purchase a USB powered relay which has serial control of the relays. 1, 2 and 4 channel boards are sold on Amazon. I have used these boards and they work just as well as the USBTMC version. The downside is that the operating system determine's the COM or TTY device name, and they can not be queried to check their presence or status.
+A simpler approach could be to just purchase a USB powered relay which has serial control of the relays. 1, 2 and 4 channel boards are sold on Amazon. I have used these boards and they work just as well as the USBTMC version. The downside is that the operating system determines the COM or TTY device name, and they can not be queried to check their presence or status.
 
 I have used this board from Amazon:
 https://www.amazon.com/NOYITO-2-Channel-Module-Control-Intelligent/dp/B081RM7PMY
