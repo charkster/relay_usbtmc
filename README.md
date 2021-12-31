@@ -13,7 +13,7 @@ GPIO2:RELAY 1 # relay #2 on
 
 GPIO2:RELAY 0 # relay #2 off
 
-*RST # set both relays to 
+*RST # set both relays off
 
 *IDN? # returns "QT PY Relay," with a 32bit unique identifier from the SAMD21
 
