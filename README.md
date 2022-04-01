@@ -1,6 +1,8 @@
 # relay_usbtmc
 Two relay channels are controlled with an Adafruit QT PY SAMD21 board running USBTMC
 
+![picture](https://github.com/charkster/relay_usbtmc/blob/main/qt_py_usbtmc_2_channel_relay_control.JPG)
+
 I bought a five-pack of single channel AC/DC relays which can be controlled with a 3.3V level. I then glued 2 of them together and then glued an Adafruit QT PY microcontroller board to the top. The QT PY's STEMMA QT connector is used with a STEMMA QT cable to physically connect power, ground and control to the two relays. I modified the TINYUSB project's USBTMC device example to control the SDA and SCL pins of the QT PY as GPIOs. The relays are powered and controlled with the USB connection to the QT PY board through the STEMMA QT cable. The cool part of this new device is that it is a USBTMC device, which can be controlled and queried with simple SCPI commands. Another benefit of this approach is that the *IDN? command returns the SAMD21's unique identifier as the serial number of the device (which means that you can connect many of these homemade devices on a single host and keep track of all of them).
 
 Here are the SCPI commands which can be used:
@@ -31,5 +33,3 @@ A simpler approach could be to just purchase a USB powered relay which has seria
 
 I have used this board from Amazon:
 https://www.amazon.com/NOYITO-2-Channel-Module-Control-Intelligent/dp/B081RM7PMY
-
-
