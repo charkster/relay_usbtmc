@@ -7,15 +7,15 @@ I bought a five-pack of single channel AC/DC relays which can be controlled with
 
 Here are the SCPI commands which can be used:
 
-RELAY1:EN 1 # relay #1 on
+RELAY1:EN 1 # relay 1 on, blue STEMMA wire
 
-RELAY1:EN 0 # relay #1 off
+RELAY1:EN 0 # relay 1 off
 
 REALY1:EN? # this query returns the state of RELAY1
 
-RELAY2:EN 1 # relay #2 on
+RELAY2:EN 1 # relay 2 on, yellow STEMMA wire
 
-RELAY2:EN 0 # relay #2 off
+RELAY2:EN 0 # relay 2 off
 
 RELAY2:EN? # this query returns the state of RELAY2
 
@@ -31,7 +31,7 @@ https://www.adafruit.com/product/4210
 
 https://www.amazon.com/Channel-Optocoupler-Isolated-Control-Arduino/dp/B07XGZSYJV
 
-Feel free to test the UF2 on any QT PY SAMD21 board, as you can observe the SDA and SCL pins and see that they are controlled by the SCPI commands as GPIOs.
+Feel free to test the UF2 on any QT PY SAMD21 board, as you can observe the SDA and SCL pins and see that they are controlled by the SCPI commands as GPIOs (blue wire is relay 1, yellow wire relay 2, black wire is ground, red wire is 3.3V). When wiring the dual relays, I used two short wires (light blue in picture) to share the PWR and GND with the second relay.
 
 A simpler approach could be to just purchase a USB powered relay which has serial control of the relays. 1, 2 and 4 channel boards are sold on Amazon. I have used these boards and they work just as well as the USBTMC version. The downside is that the operating system determines the COM or TTY device name, and they can not be queried to check their presence or status.
 
