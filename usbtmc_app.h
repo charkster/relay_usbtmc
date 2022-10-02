@@ -5,6 +5,8 @@
 void     usbtmc_app_task_iter(void);
 
 void     gpio_setup(void);
+void     adc_setup(void);
+void     dac_setup(void);
 
 char * get_value(char *in_string);
 char * get_command(char *in_string, char *ptr_value);

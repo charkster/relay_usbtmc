@@ -22,17 +22,16 @@
  * THE SOFTWARE.
  *
  */
-
-#define GPIO1_PIN       PA16
-#define GPIO2_PIN       PA17
-#define IDN             "QT_Py_Dual_Relay_"
-#define IDN_QUERY       "*idn?"
-#define RST_CMD         "*rst"
-#define GPIO1_RELAY_CMD    "gpio1:relay "       // GPIO1:RELAY ON OFF 1 0
-#define GPIO1_RELAY_QUERY  "gpio1:relay?"       // GPIO1:RELAY
-#define GPIO2_RELAY_CMD    "gpio2:relay "       // GPIO2:RELAY ON OFF 1 0
-#define GPIO2_RELAY_QUERY  "gpio2:relay?"       // GPIO2:RELAY
-#define END_RESPONSE    "\n"               // USB488
+#define RELAY1_PORT      PORT_PA16
+#define RELAY2_PORT      PORT_PA17
+#define IDN              "RELAY1:EN 1\nRELAY2:EN 1\nhttps://github.com/charkster/relay_usbtmc"
+#define IDN_QUERY        "*idn?"
+#define RST_CMD          "*rst"
+#define RELAY1_EN_CMD    "relay1:en "    // RELAY1:EN ON OFF 1 0
+#define RELAY1_EN_QUERY  "relay1:en?"    // RELAY1:EN?
+#define RELAY2_EN_CMD    "relay2:en "    // RELAY2:EN ON OFF 1 0
+#define RELAY2_EN_QUERY  "relay2:en?"    // RELAY2:EN?
+#define END_RESPONSE     "\n"            // USB488
 
 #include <strings.h>
 #include <stdlib.h>     /* atoi */
@@ -87,7 +86,6 @@ tud_usbtmc_app_capabilities  =
 #define IEEE4882_STB_SER          (0x20u)
 #define IEEE4882_STB_SRQ          (0x40u)
 
-//static const char idn[] = "TinyUSB,Seeeduino Xiao,v1\r\n";
 static volatile uint8_t status;
 
 // 0=not query, 1=queried, 2=delay,set(MAV), 3=delay 4=ready?
@@ -98,18 +96,18 @@ static volatile uint32_t bulkInStarted;
 
 static volatile bool idnQuery;
 static volatile bool rst_cmd;
-static volatile bool gpio1_relay_cmd;
-static volatile bool gpio1_relay_query;
-static volatile bool gpio2_relay_cmd;
-static volatile bool gpio2_relay_query;
+static volatile bool relay1_en_cmd;
+static volatile bool relay1_en_query;
+static volatile bool relay2_en_cmd;
+static volatile bool relay2_en_query;
 
 static uint32_t resp_delay = 125u; // Adjustable delay, to allow for better testing
 static size_t   buffer_len;
 static size_t   buffer_tx_ix;      // for transmitting using multiple transfers
 static uint8_t  buffer[225];       // A few packets long should be enough.
 
-char gpio1_relay_str[2];
-char gpio2_relay_str[2];
+char relay1_en_str[2];
+char relay2_en_str[2];
 
 
 static usbtmc_msg_dev_dep_msg_in_header_t rspMsg = {
@@ -170,13 +168,13 @@ bool tud_usbtmc_msg_data_cb(void *data, size_t len, bool transfer_complete)
     return false; // buffer overflow!
   }
 
-  queryState        = transfer_complete;
-  idnQuery          = false;
-  rst_cmd           = false;
-  gpio1_relay_cmd   = false;
-  gpio1_relay_query = false;
-  gpio2_relay_cmd   = false;
-  gpio2_relay_query = false;
+  queryState      = transfer_complete;
+  idnQuery        = false;
+  rst_cmd         = false;
+  relay1_en_cmd   = false;
+  relay1_en_query = false;
+  relay2_en_cmd   = false;
+  relay2_en_query = false;
 
   if(transfer_complete && (len >=4) && !strncasecmp(IDN_QUERY,data,5))
   {
@@ -186,61 +184,61 @@ bool tud_usbtmc_msg_data_cb(void *data, size_t len, bool transfer_complete)
   {
     rst_cmd = true;
     DAC->DATA.reg = 0x0000;                // clear DAC value
-    PORT->Group[0].DIRSET.reg = PORT_PA16; // PA16 as output
-    PORT->Group[0].OUTCLR.reg = PORT_PA16; // drive low value
-    PORT->Group[0].DIRSET.reg = PORT_PA17; // PA17 as output
-    PORT->Group[0].OUTCLR.reg = PORT_PA17; // drive low value
+    PORT->Group[0].DIRSET.reg = RELAY1_PORT; // as output
+    PORT->Group[0].OUTCLR.reg = RELAY1_PORT; // drive low value
+    PORT->Group[0].DIRSET.reg = RELAY2_PORT; // as output
+    PORT->Group[0].OUTCLR.reg = RELAY2_PORT; // drive low value
   }
-  else if (transfer_complete && (len >= 12) && !strncasecmp(GPIO1_RELAY_CMD,data,12))
+  else if (transfer_complete && (len >= 12) && !strncasecmp(RELAY1_EN_CMD,data,10))
   {
-    gpio1_relay_cmd = true;
+    relay1_en_cmd = true;
     char *ptr_value = get_value(data);
-    int gpio1_relay = atoi(ptr_value);
-    if (gpio1_relay == 1)
+    int relay1_en = atoi(ptr_value);
+    if (relay1_en == 1)
     {
-      PORT->Group[0].OUTSET.reg = PORT_PA16; // drive high value
+      PORT->Group[0].OUTSET.reg = RELAY1_PORT; // drive high value
     }
-    else if (gpio1_relay == 0)
+    else if (relay1_en == 0)
     {
-      PORT->Group[0].OUTCLR.reg = PORT_PA16; // drive low value
+      PORT->Group[0].OUTCLR.reg = RELAY1_PORT; // drive low value
     }
   }
-  else if (transfer_complete && (len >= 12) && !strncasecmp(GPIO1_RELAY_QUERY,data,12))
+  else if (transfer_complete && (len >= 12) && !strncasecmp(RELAY1_EN_QUERY,data,10))
   {
-    gpio1_relay_query = true;
-    if ((PORT->Group[0].DIR.reg & PORT_PA16) && (PORT->Group[0].OUT.reg & PORT_PA16))
+    relay1_en_query = true;
+    if ((PORT->Group[0].DIR.reg & RELAY1_PORT) && (PORT->Group[0].OUT.reg & RELAY1_PORT))
     {
-      strcpy(gpio1_relay_str,"1");
+      strcpy(relay1_en_str,"1");
     }
     else
     {
-      strcpy(gpio1_relay_str,"0");
+      strcpy(relay1_en_str,"0");
     }
   }
-  else if (transfer_complete && (len >= 12) && !strncasecmp(GPIO2_RELAY_CMD,data,12))
+  else if (transfer_complete && (len >= 12) && !strncasecmp(RELAY2_EN_CMD,data,10))
   {
-    gpio2_relay_cmd = true;
+    relay2_en_cmd = true;
     char *ptr_value = get_value(data);
-    int gpio2_relay = atoi(ptr_value);
-    if (gpio2_relay == 1)
+    int relay2_en = atoi(ptr_value);
+    if (relay2_en == 1)
     {
-      PORT->Group[0].OUTSET.reg = PORT_PA17; // drive high value
+      PORT->Group[0].OUTSET.reg =  RELAY2_PORT; // drive high value
     }
-    else if (gpio2_relay == 0)
+    else if (relay2_en == 0)
     {
-      PORT->Group[0].OUTCLR.reg = PORT_PA17; // drive low value
+      PORT->Group[0].OUTCLR.reg =  RELAY2_PORT; // drive low value
     }
   }
-  else if (transfer_complete && (len >= 12) && !strncasecmp(GPIO2_RELAY_QUERY,data,12))
+  else if (transfer_complete && (len >= 12) && !strncasecmp(RELAY2_EN_QUERY,data,10))
   {
-    gpio2_relay_query = true;
-    if ((PORT->Group[0].DIR.reg & PORT_PA17) && (PORT->Group[0].OUT.reg & PORT_PA17))
+    relay2_en_query = true;
+    if ((PORT->Group[0].DIR.reg &  RELAY2_PORT) && (PORT->Group[0].OUT.reg &  RELAY2_PORT))
     {
-      strcpy(gpio2_relay_str,"1");
+      strcpy(relay2_en_str,"1");
     }
     else
     {
-      strcpy(gpio2_relay_str,"0");
+      strcpy(relay2_en_str,"0");
     }
   }
 
@@ -329,27 +327,28 @@ void usbtmc_app_task_iter(void) {
     if(bulkInStarted && (buffer_tx_ix == 0)) {
       if(idnQuery)
       {
-        char unique_id[34] = "";
-        char idn_str[52] = "QT_Py_Dual_Relay,";
-        samd21_unique_id(unique_id);
-        strcat(idn_str,unique_id);
-        tud_usbtmc_transmit_dev_msg_data(idn_str, tu_min32(sizeof(idn_str)-1,msgReqLen),true,false);
+//        char unique_id[34] = "";
+//        char idn_str[52] = IDN;
+//        samd21_unique_id(unique_id);
+//        strcat(idn_str,unique_id);
+//        tud_usbtmc_transmit_dev_msg_data(idn_str, tu_min32(sizeof(idn_str)-1,msgReqLen),true,false);
+        tud_usbtmc_transmit_dev_msg_data(IDN, tu_min32(sizeof(IDN)-1,msgReqLen),true,false);
         queryState    = 0;
         bulkInStarted = 0;
       }
-      else if (gpio1_relay_query)
+      else if (relay1_en_query)
       {
-        tud_usbtmc_transmit_dev_msg_data(gpio1_relay_str, tu_min32(sizeof(gpio1_relay_str)-1,msgReqLen),true,false);
+        tud_usbtmc_transmit_dev_msg_data(relay1_en_str, tu_min32(sizeof(relay1_en_str)-1,msgReqLen),true,false);
         queryState    = 0;
         bulkInStarted = 0;
       }
-      else if (gpio2_relay_query)
+      else if (relay2_en_query)
       {
-        tud_usbtmc_transmit_dev_msg_data(gpio2_relay_str, tu_min32(sizeof(gpio2_relay_str)-1,msgReqLen),true,false);
+        tud_usbtmc_transmit_dev_msg_data(relay2_en_str, tu_min32(sizeof(relay2_en_str)-1,msgReqLen),true,false);
         queryState    = 0;
         bulkInStarted = 0;
       }
-      else if (rst_cmd || gpio1_relay_cmd || gpio2_relay_cmd)
+      else if (rst_cmd || relay1_en_cmd || relay2_en_cmd)
       { 
         tud_usbtmc_transmit_dev_msg_data(END_RESPONSE, tu_min32(sizeof(END_RESPONSE)-1,msgReqLen),true,false);
         queryState    = 0;
@@ -447,8 +446,8 @@ bool tud_usbtmc_indicator_pulse_cb(tusb_control_request_t const * msg, uint8_t *
 //---------------------------- New Code ----------------------------//
 
 void gpio_setup(void) {
-  PORT->Group[0].OUTCLR.reg     = PORT_PA16 | PORT_PA17; // PA16 and PA17 initialized low
-  PORT->Group[0].DIRSET.reg     = PORT_PA16 | PORT_PA17; // PA16 and PA17 as output
+  PORT->Group[0].OUTCLR.reg     = RELAY1_PORT | RELAY2_PORT; // initialized low
+  PORT->Group[0].DIRSET.reg     = RELAY1_PORT | RELAY2_PORT; // as output
 }
 
 char * get_value(char *in_string) {
