@@ -7,7 +7,7 @@ I bought a five-pack of single channel AC/DC relays which can be controlled with
 
 Here are the SCPI commands which can be used:
 
-RELAY:EN 1 # relay #1 on
+RELAY1:EN 1 # relay #1 on
 
 RELAY1:EN 0 # relay #1 off
 
