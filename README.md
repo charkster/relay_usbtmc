@@ -1,4 +1,6 @@
 # relay_usbtmc
+**--> UPDATE: 8 Channel board version added (with same Adafruit QT PY SAMD21) <--**
+
 **Two relay channels** are controlled with an Adafruit QT PY SAMD21 board running **USBTMC**
 
 ![picture](https://github.com/charkster/relay_usbtmc/blob/main/qt_py_usbtmc_2_channel_relay_control.JPG)
